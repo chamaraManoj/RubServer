@@ -113,8 +113,8 @@ void Communicator::readFrameRequest() {
 			printf("recv failed with error: %d\n", WSAGetLastError());
 			closesocket(AcceptSocket);
 			WSACleanup();
-			getchar();
-			return 1;
+			
+			
 		}
 	} while (iResult > -1);
 

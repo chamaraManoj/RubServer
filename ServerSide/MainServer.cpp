@@ -4,10 +4,17 @@
 MainServer::MainServer() {}
 
 int main() {
+
+	int retRequestFrmClient=0;
+	int chunk;
+	int x1, x2, x3, x4;
+	int y1, y2, y3, y4;
+
+
 	MainServer mainServer;
 
 	mainServer.i = 100;
-	mainServer.filePaths[0] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_SD";
+	mainServer.filePaths[0] = "E:\\SelfLearning\\Rubiks\\RubiksVideos\\processedVideo_SD";
 	//mainServer.filePaths[1] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_HD";
 	//mainServer.filePaths[2] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_4K";
 
@@ -40,8 +47,49 @@ int main() {
 	***/
 	TileMerger* tilemerger = new TileMerger(&mainServer.tileBuffer1s,mainServer.videoDataBases);
 	
-	tilemerger->setTiles(0, 0, 0, 1, 1, 0, 1, 1, 0, 0);
-	tilemerger->mergeTiles();
+	/*After reading from tilemerger funtion, data is tranfered to the
+	Communicaotr modle to be sent to the client*/
+
+	Communicator* serverSideCommunicator = new Communicator(&mainServer.tileBuffer1s);
+	//tilemerger->setTiles(0, 0, 0, 1, 1, 0, 1, 1, 0, 0);
+	//tilemerger->mergeTiles();
+
+	bool listenSuccessed = serverSideCommunicator->intializeServer();
+
+	assert(listenSuccessed == true);
+
+
+	do {
+		retRequestFrmClient = serverSideCommunicator->readFrameRequest(mainServer.chunkData);	
+		//cout << retRequestFrmClient << endl;
+		
+		x1 = tilemerger->tileXCor[mainServer.chunkData[TILE_NO_1_IND]]; 
+		y1 = tilemerger->tileYCor[mainServer.chunkData[TILE_NO_1_IND]];
+		x2 = tilemerger->tileXCor[mainServer.chunkData[TILE_NO_2_IND]];
+		y2 = tilemerger->tileYCor[mainServer.chunkData[TILE_NO_2_IND]];
+		x3 = tilemerger->tileXCor[mainServer.chunkData[TILE_NO_3_IND]];
+		y3 = tilemerger->tileYCor[mainServer.chunkData[TILE_NO_3_IND]];
+		x4 = tilemerger->tileXCor[mainServer.chunkData[TILE_NO_4_IND]];
+		y4 = tilemerger->tileYCor[mainServer.chunkData[TILE_NO_4_IND]];
+		
+		chunk = (mainServer.chunkData[CHUNK_FRAME_IND_1] << 24) | 
+			(mainServer.chunkData[CHUNK_FRAME_IND_2] << 16) |
+			(mainServer.chunkData[CHUNK_FRAME_IND_3] << 8) |
+			(mainServer.chunkData[CHUNK_FRAME_IND_4]);
+
+		tilemerger->setTiles(x1,y1,x2,y2,x3,y3,x4,y4, mainServer.chunkData[CHUNK_QUAL_IND],chunk);
+		tilemerger->mergeTiles();
+
+		cout << "Tile Merged" << endl;
+		cout << size
+
+		memset(mainServer.chunkData, 0, sizeof mainServer.chunkData);
+		
+	} while (retRequestFrmClient > 0);
+	
+	
+	closesocket(serverSideCommunicator->ListenSocket);
+
 
 	return 0;
 }

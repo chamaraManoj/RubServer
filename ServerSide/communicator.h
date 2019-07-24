@@ -14,9 +14,8 @@
 #pragma warning(disable:4996) 
 // #pragma comment (lib, "Mswsock.lib")
 
-#define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT 5555
-#define IP_ADDRESS "10.1.1.35"
+#define DEFAULT_PORT 5551
+#define IP_ADDRESS "10.130.1.229"
 
 class Communicator {
 private:
@@ -29,25 +28,29 @@ private:
 	bool listenSucess;
 	bool acceptSucess;
 
-	char recvbuf[DEFAULT_BUFLEN];
-	int recvbuflen = DEFAULT_BUFLEN;
+	char recvbuf[DEFAULT_BUFLEN_RECEIVE];
+	int recvbuflen = DEFAULT_BUFLEN_RECEIVE;
 
 	WSADATA wsaData;
-
-	// the listening socket to be created
-	SOCKET ListenSocket;
 
 	// The socket address to be passed to bind
 	sockaddr_in service;
 
+	/*Buffer to store the data to be sent. ideally this is a 
+	~7 frames x 4 layers x 4 tiles which has extra 2 capacity to store
+	extra 2 tiles data*/
+	tileBuffer* tileBuffer1s;
 
 
 public:
-	Communicator();
+	Communicator(tileBuffer* tileBuffer1s);
 	bool intializeServer();
-	void readFrameRequest();
+	int readFrameRequest(char (&receiveBuffer)[DEFAULT_BUFLEN_RECEIVE]);
+	int sendData();
 
-
+	// the listening socket to be created
+	SOCKET ListenSocket;
+	SOCKET AcceptSocket;
 };
 
 

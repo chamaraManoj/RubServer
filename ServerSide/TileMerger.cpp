@@ -13,6 +13,7 @@ TileMerger::TileMerger(tileBuffer* tileBuffer1s, videoDataBase videoDataBases[QU
 	this->videoDataBases[2] = &videoDataBases[2];
 }
  
+/*In this context x = col and y = row*/
 void TileMerger::setTiles(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4, int qualityL, int chunk) {
 	this->xCor[0] = x1; this->yCor[0] = y1;
 	this->xCor[1] = x2; this->yCor[1] = y2;
@@ -24,19 +25,19 @@ void TileMerger::setTiles(int x1, int y1, int x2, int y2, int x3, int y3, int x4
 
 void TileMerger::mergeTiles() {
 	int tileNum;
-	
+
 	for (tileNum = 0; tileNum < NUM_OF_TILES; tileNum++) {
 		switch (this->qualityL) {
 		case QUALITY_SD:
 			(*this->tileBuffer1s).tileBuffer[tileNum] = (*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
-			break;			
+			break;
 		case QUALITY_HD:
 			(*this->tileBuffer1s).tileBuffer[tileNum] = (*this->videoDataBases[1]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
 			break;
-		}
+
 		case QUALITY_4K:
 			(*this->tileBuffer1s).tileBuffer[tileNum] = (*this->videoDataBases[1]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
 			break;
-	}
+		}
 	}
 }

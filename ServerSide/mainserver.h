@@ -11,6 +11,7 @@
 #include "commondata.h"
 #include "filereader.h"
 #include "tilemerger.h"
+#include "communicator.h"
 
 class MainServer {
 private:
@@ -21,6 +22,7 @@ public:
 	tileBuffer tileBuffer1s;
 	videoDataBase videoDataBases[3];
 	string filePaths[QUALITY_LEVEL];
+	char chunkData[DEFAULT_BUFLEN_RECEIVE];
 };
 
 #endif // !MAINSERVER_H

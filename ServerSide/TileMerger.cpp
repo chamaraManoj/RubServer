@@ -6,8 +6,8 @@ array with 6 elements with additional 2 tile1Sec elements*/
 
 #include "tilemerger.h"
 
-TileMerger::TileMerger(tileBuffer* tileBuffer1s, videoDataBase videoDataBases[QUALITY_LEVEL]) {
-	this->tileBuffer1s = tileBuffer1s;
+TileMerger::TileMerger(tileBufferByte* tileBufferByte1s, videoDataBase videoDataBases[QUALITY_LEVEL]) {
+	this->tileBufferByte1s = tileBufferByte1s;
 	this->videoDataBases[0] = &videoDataBases[0];
 	this->videoDataBases[1] = &videoDataBases[1];
 	this->videoDataBases[2] = &videoDataBases[2];
@@ -29,14 +29,30 @@ void TileMerger::mergeTiles() {
 	for (tileNum = 0; tileNum < NUM_OF_TILES; tileNum++) {
 		switch (this->qualityL) {
 		case QUALITY_SD:
-			(*this->tileBuffer1s).tileBuffer[tileNum] = (*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
+			copy(begin((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer1),
+				end((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer1),
+				(*this->tileBufferByte1s).tileBuffer[tileNum].subLayer1);
+
+			copy(begin((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer2),
+				end((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer2),
+				(*this->tileBufferByte1s).tileBuffer[tileNum].subLayer2);
+
+			copy(begin((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer3),
+				end((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer3),
+				(*this->tileBufferByte1s).tileBuffer[tileNum].subLayer3);
+
+			copy(begin((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer4),
+				end((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer4),
+				(*this->tileBufferByte1s).tileBuffer[tileNum].subLayer4);
+			
+			//(*this->tileBufferByte1s).tileBuffer[tileNum] = (*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
 			break;
 		case QUALITY_HD:
-			(*this->tileBuffer1s).tileBuffer[tileNum] = (*this->videoDataBases[1]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
+			(*this->tileBufferByte1s).tileBuffer[tileNum] = (*this->videoDataBases[1]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
 			break;
 
 		case QUALITY_4K:
-			(*this->tileBuffer1s).tileBuffer[tileNum] = (*this->videoDataBases[1]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
+			(*this->tileBufferByte1s).tileBuffer[tileNum] = (*this->videoDataBases[1]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
 			break;
 		}
 	}

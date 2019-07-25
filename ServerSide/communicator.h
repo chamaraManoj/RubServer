@@ -15,7 +15,7 @@
 // #pragma comment (lib, "Mswsock.lib")
 
 #define DEFAULT_PORT 5551
-#define IP_ADDRESS "10.130.1.229"
+#define IP_ADDRESS "10.1.1.35"
 
 class Communicator {
 private:
@@ -39,11 +39,11 @@ private:
 	/*Buffer to store the data to be sent. ideally this is a 
 	~7 frames x 4 layers x 4 tiles which has extra 2 capacity to store
 	extra 2 tiles data*/
-	tileBuffer* tileBuffer1s;
+	tileBufferByte* tileBufferByte1s;
 
 
 public:
-	Communicator(tileBuffer* tileBuffer1s);
+	Communicator(tileBufferByte* tileBufferByte1s);
 	bool intializeServer();
 	int readFrameRequest(char (&receiveBuffer)[DEFAULT_BUFLEN_RECEIVE]);
 	int sendData();

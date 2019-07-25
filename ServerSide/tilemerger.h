@@ -15,13 +15,13 @@ private:
 	int qualityL;
 	int chunk;
 	videoDataBase* videoDataBases[QUALITY_LEVEL];
-	tileBuffer* tileBuffer1s;
+	tileBufferByte* tileBufferByte1s;
 
 public:
 	int tileXCor[20] = {0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4};
 	int tileYCor[20] = {0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3};
 
-	TileMerger(tileBuffer* tileBuffer1s, videoDataBase videoDataBases[QUALITY_LEVEL]);
+	TileMerger(tileBufferByte* tileBufferByte1s, videoDataBase videoDataBases[QUALITY_LEVEL]);
 	void setTiles(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4, int qualityL, int chunk);
 	void mergeTiles();
 

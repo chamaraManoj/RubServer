@@ -11,7 +11,7 @@ FileReader::FileReader(string filePath, int resolution, videoDataBase* videoData
 	this->inputFilePath = filePath;
 	this->resolution = resolution;
 	this->videoDataBaseSD = videoDataBaseSD;
-	this->i = i;
+	//this->i = i;
 }
 
 /*=====Method of File Reader class=======================
@@ -41,10 +41,12 @@ int FileReader::createDataBase() {
 	int col;
 	int sec;
 	int layer;
-	*i = *i + 1;
+	//*i = *i + 1;
 	int ret = 0, got_frame;
 	AVPacket pkt;
 	AVFormatContext* fmt_ctx = NULL;
+	AVIOContext* input = NULL;
+	uint8_t buf[DEFAULT_SUB_LAYER_LENGTH];
 	int video_frame_count = 0;
 
 	string tempFilePath;
@@ -55,77 +57,80 @@ int FileReader::createDataBase() {
 			for (sec = 0; sec < NUM_OF_SEC; sec++) {
 				for (layer = 0; layer < NUM_OF_LAYERS; layer++) {
 					tempFilePath = this->getFilePath(row, col, sec, layer);
-
+					input = NULL;
 					/*Open the input file and allocate the format context: i.e. mp4,mpeg*/
-					if (avformat_open_input(&fmt_ctx, tempFilePath.c_str(), NULL, NULL) < 0) { 
+					if (avio_open2(&input, tempFilePath.c_str(), AVIO_FLAG_READ, NULL, NULL) < 0) {
 						fprintf(stderr, "Could not open source file %s\n", tempFilePath.c_str());
 						exit(1);
 					}
 
 					/*Get the stream information: video/audio*/
-					if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
+					/*if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
 						fprintf(stderr, "Could not find stream information\n");
 						exit(1);
-					}
+					}*/
 
 					/*Printing the details about the inputformat*/
 					//av_dump_format(fmt_ctx, 0, tempFilePath.c_str(), 0);
 
 					/*initialize the packet*/
-					av_init_packet(&pkt);
+					/*av_init_packet(&pkt);
 					pkt.data = NULL;
-					pkt.size = 0;
-
+					pkt.size = 0;*/
+					av_log(NULL, AV_LOG_INFO, "readFile %d %d %02d %d  \n", row, col, sec, layer);
 					int frameCount=0;
-					while (av_read_frame(fmt_ctx, &pkt) >= 0) {
-						frameCount++;
-						AVPacket orig_pkt = pkt;
+					while (avio_read(input, buf, sizeof(buf))>= 0) {
+						//frameCount++;
+						//AVPacket orig_pkt = pkt;
 
-						av_log(NULL, AV_LOG_INFO, "readFrame %d %d %02d %d %01d \n",row,col,sec,layer, frameCount);
-						if (pkt.size > 1) {
+						
+						//if (pkt.size > 1) {
 							
 							//printf("%d", pkt.size );
 							/*stroing the file into frame*/
 							switch (layer) {
 							case 0:
-								(*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer1.push_back(orig_pkt);
+								copy(begin(buf),end(buf),(*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer1);
 								break;
 
 							case 1:
-								if(frameCount == 1)
+								//if(frameCount == 1)
+								//	break;
+								//else {
+								copy(begin(buf), end(buf), (*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer2);
 									break;
-								else {
-									(*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer2.push_back(orig_pkt);
-									break;
-								}
+								//}
 								
 							case 2:
-								if (frameCount == 1)
+								//if (frameCount == 1)
+								//	break;
+								//else {
+								copy(begin(buf), end(buf), (*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer3);
 									break;
-								else {
-									(*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer3.push_back(orig_pkt);
-									break;
-								}
+								//}
 
 							case 3:
-								if (frameCount == 1)
+								//if (frameCount == 1)
+								//	break;
+								//else {
+								copy(begin(buf), end(buf), (*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer4);
 									break;
-								else {
-									(*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer4.push_back(orig_pkt);
-									break;
-								}
+								//}
 									
 							}
 							
-						}
-						else {
-							av_log(NULL, AV_LOG_INFO, "readFrame %d %d %02d %d %02d\n", row, col, sec, layer, frameCount);
-						}
+						//}
+						//else {
+						//	av_log(NULL, AV_LOG_INFO, "readFrame %d %d %02d %d %02d\n", row, col, sec, layer, frameCount);
+						//}
 
-						av_packet_unref(&orig_pkt);
+						//av_packet_unref(&orig_pkt);
 					}
-					av_log(NULL, AV_LOG_INFO, "\n");
-					avformat_close_input(&fmt_ctx);
+					memset(buf, 0, sizeof(buf));
+					avio_close(input);
+					//av_log(NULL, AV_LOG_INFO, "\n");
+
+					//avformat_close_input(&fmt_ctx);
 				}
 				
 			}

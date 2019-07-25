@@ -35,6 +35,8 @@
 #define TILE_NO_4_IND				7
 #define CHUNK_QUAL_IND				8	
 
+#define DEFAULT_SUB_LAYER_LENGTH	sizeof(uint8_t)*1024*10
+
 using namespace std;
 
 extern "C" {
@@ -53,22 +55,39 @@ extern "C" {
 
 /*Structure of the database of video*/
 
-typedef struct tile1Sec {
+/*typedef struct tile1Sec {
 	std::vector<AVPacket> subLayer1;
 	std::vector<AVPacket> subLayer2;
 	std::vector<AVPacket> subLayer3;
 	std::vector<AVPacket> subLayer4;
-}tile1Sec;
+}tile1Sec;*/
 
-typedef struct chunk60Sec {
+/*typedef struct chunk60Sec {
 	tile1Sec chunks[60];
-}chunk60Sec;
+}chunk60Sec;*/
+
+/*typedef struct tileBuffer {
+	tile1Sec tileBuffer[4];
+}tileBuffer;*/
+
+typedef struct tile1SecByte {
+	uint8_t subLayer1[DEFAULT_SUB_LAYER_LENGTH];
+	uint8_t subLayer2[DEFAULT_SUB_LAYER_LENGTH];
+	uint8_t subLayer3[DEFAULT_SUB_LAYER_LENGTH];
+	uint8_t subLayer4[DEFAULT_SUB_LAYER_LENGTH];
+}tile1SecByte;
+
+typedef struct chunk60SecByte {
+	tile1SecByte chunks[60];
+}chunk60SecByte;
 
 typedef struct video {
-	chunk60Sec tiles[4][5];
+	chunk60SecByte tiles[4][5];
 }videoDataBase;
 
-typedef struct tileBuffer {
-	tile1Sec tileBuffer[4];
-}tileBuffer;
+typedef struct tileBufferByte {
+	tile1SecByte tileBuffer[4];
+}tileBufferByte;
+
+
 #endif // !COMMONDATA_H

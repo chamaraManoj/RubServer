@@ -4,8 +4,8 @@ user.*/
 
 #include "communicator.h"
 
-Communicator::Communicator(tileBuffer* tileBuffer1s){
-	this->tileBuffer1s = tileBuffer1s;
+Communicator::Communicator(tileBufferByte* tileBufferByte1s){
+	this->tileBufferByte1s = tileBufferByte1s;
 }
 
 bool Communicator::intializeServer(){

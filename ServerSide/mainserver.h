@@ -19,7 +19,7 @@ private:
 public:
 	MainServer();
 	int i;
-	tileBuffer tileBuffer1s;
+	tileBufferByte tileBufferByte1s;
 	videoDataBase videoDataBases[3];
 	string filePaths[QUALITY_LEVEL];
 	char chunkData[DEFAULT_BUFLEN_RECEIVE];

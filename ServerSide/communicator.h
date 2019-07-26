@@ -2,20 +2,19 @@
 #define COMMUNICATOR_H
 
 
-#define WIN32_LEAN_AND_MEAN
+
 
 #include "commondata.h"
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
+
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
 #pragma warning(disable:4996) 
 // #pragma comment (lib, "Mswsock.lib")
 
-#define DEFAULT_PORT 5551
-#define IP_ADDRESS "10.1.1.35"
+#define DEFAULT_PORT 5555
+//#define DEFAULT_PORT 5552
+#define IP_ADDRESS "10.130.1.229"
 
 class Communicator {
 private:

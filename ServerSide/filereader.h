@@ -13,7 +13,7 @@ class FileReader {
 private:
 	string inputFilePath;
 	int resolution;
-	videoDataBase* videoDataBaseSD;
+	videoDataBase* _videoDataBase;
 
 public:
 	int *i;

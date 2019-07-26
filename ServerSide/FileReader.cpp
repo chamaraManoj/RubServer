@@ -7,10 +7,10 @@ as pacckets and return those packets to the tile merger class*/
 
 /*Class for reading the encoded video files to the main memoray database*/
 
-FileReader::FileReader(string filePath, int resolution, videoDataBase* videoDataBaseSD,int *i){
+FileReader::FileReader(string filePath, int resolution, videoDataBase* _videoDataBase,int *i){
 	this->inputFilePath = filePath;
 	this->resolution = resolution;
-	this->videoDataBaseSD = videoDataBaseSD;
+	this->_videoDataBase = _videoDataBase;
 	//this->i = i;
 }
 
@@ -48,6 +48,8 @@ int FileReader::createDataBase() {
 	AVIOContext* input = NULL;
 	uint8_t buf[DEFAULT_SUB_LAYER_LENGTH];
 	int video_frame_count = 0;
+	int numOfBytesread;
+	int numOfBytesReadTemp;
 
 	string tempFilePath;
 
@@ -64,6 +66,8 @@ int FileReader::createDataBase() {
 						exit(1);
 					}
 
+					numOfBytesread = 0;
+					numOfBytesReadTemp = 0;
 					/*Get the stream information: video/audio*/
 					/*if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
 						fprintf(stderr, "Could not find stream information\n");
@@ -79,45 +83,52 @@ int FileReader::createDataBase() {
 					pkt.size = 0;*/
 					av_log(NULL, AV_LOG_INFO, "readFile %d %d %02d %d  \n", row, col, sec, layer);
 					int frameCount=0;
-					while (avio_read(input, buf, sizeof(buf))>= 0) {
+					while ((numOfBytesReadTemp = avio_read(input, buf, sizeof(buf))) >= 0) {
 						//frameCount++;
 						//AVPacket orig_pkt = pkt;
-
+						numOfBytesread += numOfBytesReadTemp;
+					}
 						
 						//if (pkt.size > 1) {
 							
-							//printf("%d", pkt.size );
-							/*stroing the file into frame*/
-							switch (layer) {
-							case 0:
-								copy(begin(buf),end(buf),(*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer1);
-								break;
+						//printf("%d", pkt.size );
+						/*stroing the file into frame*/
 
-							case 1:
-								//if(frameCount == 1)
-								//	break;
-								//else {
-								copy(begin(buf), end(buf), (*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer2);
-									break;
-								//}
+					
+					switch (layer) {
+					case 0:
+						copy(begin(buf),end(buf),(*this->_videoDataBase).tiles[row][col].chunks[sec].subLayer1);
+						(*this->_videoDataBase).tilesSize[row][col].chunksSize[sec].sublayer1Size = numOfBytesread;
+						break;
+
+					case 1:
+						//if(frameCount == 1)
+						//	break;
+						//else {
+						copy(begin(buf), end(buf), (*this->_videoDataBase).tiles[row][col].chunks[sec].subLayer2);
+						(*this->_videoDataBase).tilesSize[row][col].chunksSize[sec].sublayer2Size = numOfBytesread;
+						break;
+						//}
 								
-							case 2:
-								//if (frameCount == 1)
-								//	break;
-								//else {
-								copy(begin(buf), end(buf), (*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer3);
-									break;
-								//}
+					case 2:
+						//if (frameCount == 1)
+						//	break;
+						//else {
+						copy(begin(buf), end(buf), (*this->_videoDataBase).tiles[row][col].chunks[sec].subLayer3);
+						(*this->_videoDataBase).tilesSize[row][col].chunksSize[sec].sublayer3Size = numOfBytesread;
+						break;
+						//}
 
-							case 3:
-								//if (frameCount == 1)
-								//	break;
-								//else {
-								copy(begin(buf), end(buf), (*this->videoDataBaseSD).tiles[row][col].chunks[sec].subLayer4);
-									break;
-								//}
+					case 3:
+						//if (frameCount == 1)
+						//	break;
+						//else {
+						copy(begin(buf), end(buf), (*this->_videoDataBase).tiles[row][col].chunks[sec].subLayer4);
+						(*this->_videoDataBase).tilesSize[row][col].chunksSize[sec].sublayer4Size = numOfBytesread;
+						break;
+						//}
 									
-							}
+					}
 							
 						//}
 						//else {
@@ -125,7 +136,7 @@ int FileReader::createDataBase() {
 						//}
 
 						//av_packet_unref(&orig_pkt);
-					}
+					
 					memset(buf, 0, sizeof(buf));
 					avio_close(input);
 					//av_log(NULL, AV_LOG_INFO, "\n");

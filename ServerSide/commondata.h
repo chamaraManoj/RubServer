@@ -2,6 +2,7 @@
 #ifndef COMMONDATA_H
 #define COMMONDATA_H
 
+#define WIN32_LEAN_AND_MEAN
 
 #include <vector>
 #include <iostream>
@@ -10,13 +11,19 @@
 #include <sstream>
 #include <iomanip>
 #include <assert.h>
+//#include <Windows.h>
+#include <process.h>
+#include <stdio.h>
 
-
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
 
 #define NUM_OF_ROWS					4
 #define NUM_OF_COL					5
 #define NUM_OF_SEC					60
 #define NUM_OF_LAYERS 				4
+
 
 #define QUALITY_SD					0
 #define QUALITY_HD					1
@@ -36,6 +43,8 @@
 #define CHUNK_QUAL_IND				8	
 
 #define DEFAULT_SUB_LAYER_LENGTH	sizeof(uint8_t)*1024*10
+
+#define NUM_OF_SEND_THREADS			4
 
 using namespace std;
 
@@ -77,17 +86,39 @@ typedef struct tile1SecByte {
 	uint8_t subLayer4[DEFAULT_SUB_LAYER_LENGTH];
 }tile1SecByte;
 
+typedef struct tile1SecSize {
+	uint16_t sublayer1Size;
+	uint16_t sublayer2Size;
+	uint16_t sublayer3Size;
+	uint16_t sublayer4Size;
+}tile1SecSize;
+
 typedef struct chunk60SecByte {
 	tile1SecByte chunks[60];
 }chunk60SecByte;
 
-typedef struct video {
+typedef struct chunk60SecSize {
+	tile1SecSize chunksSize[60];
+}chunk60SecSize;
+
+typedef struct videoDataBase {
 	chunk60SecByte tiles[4][5];
+	chunk60SecSize tilesSize[4][5];
 }videoDataBase;
+
+/*typedef struct videoDataBaseSize {
+	chunk60SecSize tilesSize[4][5];
+}videoDataBaseSize;
+*/
 
 typedef struct tileBufferByte {
 	tile1SecByte tileBuffer[4];
+	tile1SecSize tileBufferSize[4];
 }tileBufferByte;
 
-
+typedef struct dataPacketSend {
+	int numOfbytes;
+	SOCKET socket;
+	uint8_t* buffer;
+}dataPacketSend;
 #endif // !COMMONDATA_H

@@ -29,7 +29,7 @@ void TileMerger::mergeTiles() {
 	for (tileNum = 0; tileNum < NUM_OF_TILES; tileNum++) {
 		switch (this->qualityL) {
 		case QUALITY_SD:
-			copy(begin((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer1),
+			/*copy(begin((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer1),
 				end((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer1),
 				(*this->tileBufferByte1s).tileBuffer[tileNum].subLayer1);
 
@@ -43,7 +43,25 @@ void TileMerger::mergeTiles() {
 
 			copy(begin((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer4),
 				end((*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk].subLayer4),
-				(*this->tileBufferByte1s).tileBuffer[tileNum].subLayer4);
+				(*this->tileBufferByte1s).tileBuffer[tileNum].subLayer4);*/
+
+			/*Reading the tile buffer values read*/
+			(*this->tileBufferByte1s).tileBuffer[tileNum] = 
+				(*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
+
+			/*Reading the sizes of each layer*/
+			(*this->tileBufferByte1s).tileBufferSize[tileNum].sublayer1Size =
+				(*this->videoDataBases[0]).tilesSize[xCor[tileNum]][yCor[tileNum]].chunksSize->sublayer1Size;
+
+			(*this->tileBufferByte1s).tileBufferSize[tileNum].sublayer2Size =
+				(*this->videoDataBases[0]).tilesSize[xCor[tileNum]][yCor[tileNum]].chunksSize->sublayer2Size;
+
+			(*this->tileBufferByte1s).tileBufferSize[tileNum].sublayer3Size =
+				(*this->videoDataBases[0]).tilesSize[xCor[tileNum]][yCor[tileNum]].chunksSize->sublayer3Size;
+
+			(*this->tileBufferByte1s).tileBufferSize[tileNum].sublayer4Size =
+				(*this->videoDataBases[0]).tilesSize[xCor[tileNum]][yCor[tileNum]].chunksSize->sublayer4Size;
+
 			
 			//(*this->tileBufferByte1s).tileBuffer[tileNum] = (*this->videoDataBases[0]).tiles[xCor[tileNum]][yCor[tileNum]].chunks[chunk];
 			break;

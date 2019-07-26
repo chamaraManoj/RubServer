@@ -23,6 +23,10 @@ public:
 	videoDataBase videoDataBases[3];
 	string filePaths[QUALITY_LEVEL];
 	char chunkData[DEFAULT_BUFLEN_RECEIVE];
+
+	dataPacketSend packetsSend[NUM_OF_SEND_THREADS];
+
+
 };
 
 #endif // !MAINSERVER_H

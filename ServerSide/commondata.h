@@ -19,6 +19,8 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 
+/*Each video is 60 seconds long and each frame is divided into 
+4 x 5 tiles. Each tile stream is divided to 4 layers*/
 #define NUM_OF_ROWS					4
 #define NUM_OF_COL					5
 #define NUM_OF_SEC					60
@@ -32,6 +34,7 @@
 #define QUALITY_LEVEL				3	
 #define DEFAULT_BUFLEN_RECEIVE		10
 
+/*Inidices of the received data packet from the client*/
 #define CHUNK_FRAME_IND_1			0
 #define CHUNK_FRAME_IND_2			1
 #define CHUNK_FRAME_IND_3			2
@@ -42,9 +45,31 @@
 #define TILE_NO_4_IND				7
 #define CHUNK_QUAL_IND				8	
 
-#define DEFAULT_SUB_LAYER_LENGTH	sizeof(uint8_t)*1024*10
+
+#define LAYER_1						0
+#define LAYER_2						1
+#define LAYER_3						2
+#define LAYER_4						3
+
+/*Communication model uses 5 sockets
+SOCKET 0 listen to the request from the server
+SOCKET 1,2,3,4 send data to the server*/
+#define SOCKET_0					0
+#define SOCKET_1					1
+#define SOCKET_2					2
+#define SOCKET_3					3
+#define SOCKET_4					4
+
+/*Each sub layer of a frame is 1024*10 long and
+each packet related to the 1s video chunk of tile is 
+1024*10*4 + 4*2 long*/
+#define DEFAULT_SUB_LAYER_LENGTH	1024*10
+#define DEFAULT_PACKET_BUFFER		1024*10*4 + 4*2
+
 
 #define NUM_OF_SEND_THREADS			4
+#define NUM_OF_TOTAL_PORTS			5 //including the listening port
+
 
 using namespace std;
 
@@ -117,8 +142,8 @@ typedef struct tileBufferByte {
 }tileBufferByte;
 
 typedef struct dataPacketSend {
-	int numOfbytes;
+	uint16_t layerSizes[NUM_OF_LAYERS];
+	uint8_t buffer[DEFAULT_PACKET_BUFFER];
 	SOCKET socket;
-	uint8_t* buffer;
 }dataPacketSend;
-#endif // !COMMONDATA_H
+#endif // !COMMONDATA_HL

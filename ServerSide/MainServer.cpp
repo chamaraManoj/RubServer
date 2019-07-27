@@ -4,12 +4,35 @@
 MainServer::MainServer() {}
 
 
-unsigned int __stdcall myThread(void* data)
+unsigned int __stdcall myThreadSendData(void* dataPacket)
 {
-	printf("Thread %d\n", GetCurrentThreadId());
+	int iSendResult;
+	
+	dataPacketSend &myDataPacket = *((dataPacketSend*)dataPacket);
+	
+	iSendResult = send(myDataPacket.socket, (const char*)myDataPacket.buffer, DEFAULT_PACKET_BUFFER, 0);
+
+	//cout << myDataPacket.layerSizes[0] << " "<<  myDataPacket.layerSizes[1] << " " << myDataPacket.layerSizes[2] << " " << myDataPacket.layerSizes[3] << endl;
+	cout <<"\n"<< iSendResult << endl;
+
 	return 0;
+
 }
 
+/*int Communicator::sendData(SOCKET socket, char* recvbuf, int result) {
+	iSendResult = send(this->AcceptSocket, this->recvbuf, this->iResult, 0);
+	if (this->iSendResult == SOCKET_ERROR) {
+		printf("send failed with error: %d\n", WSAGetLastError());
+		closesocket(this->AcceptSocket);
+		WSACleanup();
+		//return 1;
+	}
+	else {
+		printf("Bytes sent: %d\n", iSendResult);
+	}
+
+	return 0;
+	*/
 int main() {
 
 	int retRequestFrmClient = 0;
@@ -18,12 +41,18 @@ int main() {
 	int x1, x2, x3, x4;
 	int y1, y2, y3, y4;
 
-	int tempCount;
+	int tempCount1;
+	int tempCount2;
 
+	SOCKET* AcceptSocket;
+	SOCKET* ListenSocket;
 	MainServer* mainServer = new MainServer();
+	
+
 
 	mainServer->i = 100;
-	mainServer->filePaths[0] = "E:\\SelfLearning\\Rubiks\\RubiksVideos\\processedVideo_SD";
+	//mainServer->filePaths[0] = "E:\\SelfLearning\\Rubiks\\RubiksVideos\\processedVideo_SD";
+	mainServer->filePaths[0] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_SD";
 	//mainServer.filePaths[1] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_HD";
 	//mainServer.filePaths[2] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_4K";
 
@@ -42,35 +71,33 @@ int main() {
 	else
 		av_log(NULL, AV_LOG_INFO, "Read fileReader2 unsucessful");
 
-		/*if (fileReader3.createDataBase(fileReader3.videoNum1) == 0)
-			av_log(NULL, AV_LOG_INFO, "Read fileReader3 sucessful");
-		else
-			av_log(NULL, AV_LOG_INFO, "Read fileReader3 unsucessful");*/
+	/*if (fileReader3.createDataBase(fileReader3.videoNum1) == 0)
+		av_log(NULL, AV_LOG_INFO, "Read fileReader3 sucessful");
+	else
+		av_log(NULL, AV_LOG_INFO, "Read fileReader3 unsucessful");*/
 
-			/***
-			This code section should have the HTTP server communication module.
-			Server module returns the current tile positions, chunk number and
-			quality to be streamed from the server. These values are directly
-			passed to the tileMerger object which in turn returns the selected
-			tiles from SD, HD or 4K database.
-			***/
+	/***
+	This code section should have the HTTP server communication module. Server module returns the current tile positions, chunk number and
+	quality to be streamed from the server. These values are directly passed to the tileMerger object which in turn returns the selected
+	tiles from SD, HD or 4K database.
+	***/
 	TileMerger* tilemerger = new TileMerger(&mainServer->tileBufferByte1s, mainServer->videoDataBases);
 
 	/*After reading from tilemerger funtion, data is tranfered to the
 	Communicaotr modle to be sent to the client*/
 	Communicator* serverSideCommunicator = new Communicator(&mainServer->tileBufferByte1s);
 
-	bool listenSuccessed = serverSideCommunicator->intializeServer();
+	ListenSocket = serverSideCommunicator->intializeServer();
 
 	//tilemerger->setTiles(0, 0, 0, 1, 1, 0, 1, 1, 0, 0);
 	//tilemerger->mergeTiles();
 
-	assert(listenSuccessed == true);
+	assert(ListenSocket != NULL);
 
 
 	do {
-		retRequestFrmClient = serverSideCommunicator->readFrameRequest(mainServer->chunkData);
-		cout << retRequestFrmClient << endl;
+		AcceptSocket = serverSideCommunicator->readFrameRequest(mainServer->chunkData);
+		assert(AcceptSocket != NULL);
 
 		x1 = tilemerger->tileXCor[mainServer->chunkData[TILE_NO_1_IND]];
 		y1 = tilemerger->tileYCor[mainServer->chunkData[TILE_NO_1_IND]];
@@ -93,39 +120,70 @@ int main() {
 		tilemerger->mergeTiles();
 
 		/*creating array of dataPacketSend to be sent to the client*/
-		/*for (tempCount = 0; tempCount < NUM_OF_SEND_THREADS; tempCount++) {
-			mainServer->packetsSend[tempCount].numOfbytes =
-		};*/
+		for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+			mainServer->packetsSend[tempCount1].socket = AcceptSocket[tempCount1+1];
 
+			uint16_t size1 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer1Size;
+			uint16_t size2 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer2Size;
+			uint16_t size3 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer3Size;
+			uint16_t size4 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer4Size;
 
+			mainServer->packetsSend[tempCount1].buffer[0] = (size1 & 0x0000ff00) >> 8;
+			mainServer->packetsSend[tempCount1].buffer[1] = (size1 & 0x000000ff);
+			mainServer->packetsSend[tempCount1].buffer[2] = (size2 & 0x0000ff00) >> 8;
+			mainServer->packetsSend[tempCount1].buffer[3] = (size2 & 0x000000ff);
+			mainServer->packetsSend[tempCount1].buffer[4] = (size3 & 0x0000ff00) >> 8;
+			mainServer->packetsSend[tempCount1].buffer[5] = (size3 & 0x000000ff);
+			mainServer->packetsSend[tempCount1].buffer[6] = (size4 & 0x0000ff00) >> 8;
+			mainServer->packetsSend[tempCount1].buffer[7] = (size4 & 0x000000ff);
 
+			/*fill the bytes to the buffers*/
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1),
+				mainServer->packetsSend[tempCount1].buffer + 8);
 
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2),
+				mainServer->packetsSend[tempCount1].buffer + 8 + DEFAULT_SUB_LAYER_LENGTH);
+
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3),
+				mainServer->packetsSend[tempCount1].buffer + 8 + DEFAULT_SUB_LAYER_LENGTH * 2);
+
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4),
+				mainServer->packetsSend[tempCount1].buffer + 8 + DEFAULT_SUB_LAYER_LENGTH * 3);
+			
+			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size1;
+			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size2;
+			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size3;
+			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size4;
+					
+		}
+
+	
 		/*Send tilebuffer seperately to the client using multiple threads*/
 		HANDLE myHandle[4];
 
 		/*Creating multiple threads*/
-		for (tempCount = 0; tempCount < NUM_OF_SEND_THREADS; tempCount++) {
-			myHandle[tempCount] = (HANDLE) _beginthreadex(0, 0, &myThread, 0, 0, 0);
+		for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+			myHandle[tempCount1] = (HANDLE) _beginthreadex(0, 0, &myThreadSendData, &mainServer->packetsSend[tempCount1], 0, 0);
 		}
 
 		/*Wait for objects to be completed*/
-		for (tempCount = 0; tempCount < NUM_OF_SEND_THREADS; tempCount++) {
-			WaitForSingleObject(myHandle[tempCount], INFINITE);
+		for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+			WaitForSingleObject(myHandle[tempCount1], INFINITE);
 		}
 		
 		/*Release the thread and resources used*/
-		for (tempCount = 0; tempCount < NUM_OF_SEND_THREADS; tempCount++) {
-			CloseHandle(myHandle[tempCount]);
+		for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+			CloseHandle(myHandle[tempCount1]);
 		}
 
-		cout << "Tile Merged" << endl;
+		//cout << "Tile Merged" << endl;
 		
 		memset(mainServer->chunkData, 0, sizeof mainServer->chunkData);
 		
 	} while (retRequestFrmClient > 0);
 	
 	
-	closesocket(serverSideCommunicator->ListenSocket);
+	//closesocket(serverSideCommunicator->ListenSocket);
 	
 
 	return 0;

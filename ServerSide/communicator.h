@@ -1,7 +1,13 @@
 #ifndef COMMUNICATOR_H
 #define COMMUNICATOR_H
 
+/*Packet structure defined for the transmission of one tile
 
+[[Layer 1 size][Layer 2 size][layer 3 size][layer 4 size][Layer 1 Buffer ][Layer 2 Buffer ][Layer 3 Buffer ][Layer 4 Buffer ]]
+
+[[ 2 uint8_t  ][ 2 uint8_t  ][ 2 uint8_t  ][ 2 uint8_t  ][1024*10 uint8_t][1024*10 uint8_t][1024*10 uint8_t][1024*10 uint8_t]]
+
+each tile contains above data to be sent to the client over Wifi*/
 
 
 #include "commondata.h"
@@ -12,9 +18,14 @@
 #pragma warning(disable:4996) 
 // #pragma comment (lib, "Mswsock.lib")
 
-#define DEFAULT_PORT 5555
-//#define DEFAULT_PORT 5552
-#define IP_ADDRESS "10.130.1.229"
+#define DEFAULT_PORT_0 5550
+#define DEFAULT_PORT_1 5551
+#define DEFAULT_PORT_2 5552
+#define DEFAULT_PORT_3 5553
+#define DEFAULT_PORT_4 5554
+
+//#define IP_ADDRESS "10.130.1.229"
+#define IP_ADDRESS "10.1.1.35"
 
 class Communicator {
 private:
@@ -33,7 +44,7 @@ private:
 	WSADATA wsaData;
 
 	// The socket address to be passed to bind
-	sockaddr_in service;
+	sockaddr_in service[NUM_OF_TOTAL_PORTS];
 
 	/*Buffer to store the data to be sent. ideally this is a 
 	~7 frames x 4 layers x 4 tiles which has extra 2 capacity to store
@@ -43,13 +54,13 @@ private:
 
 public:
 	Communicator(tileBufferByte* tileBufferByte1s);
-	bool intializeServer();
-	int readFrameRequest(char (&receiveBuffer)[DEFAULT_BUFLEN_RECEIVE]);
-	int sendData();
+	SOCKET* intializeServer();
+	SOCKET*  readFrameRequest(char (&receiveBuffer)[DEFAULT_BUFLEN_RECEIVE]);
+	int sendData(SOCKET socket, char* recvbuf, int resul);
 
 	// the listening socket to be created
-	SOCKET ListenSocket;
-	SOCKET AcceptSocket;
+	SOCKET ListenSocket[NUM_OF_TOTAL_PORTS];
+	SOCKET AcceptSocket[NUM_OF_TOTAL_PORTS];
 };
 
 

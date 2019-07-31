@@ -51,8 +51,8 @@ int main() {
 
 
 	mainServer->i = 100;
-	//mainServer->filePaths[0] = "E:\\SelfLearning\\Rubiks\\RubiksVideos\\processedVideo_SD";
-	mainServer->filePaths[0] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_SD";
+	mainServer->filePaths[0] = "E:\\SelfLearning\\Rubiks\\RubiksVideos\\processedVideo_SD";
+	//mainServer->filePaths[0] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_SD";
 	//mainServer.filePaths[1] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_HD";
 	//mainServer.filePaths[2] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_4K";
 
@@ -138,22 +138,22 @@ int main() {
 			mainServer->packetsSend[tempCount1].buffer[7] = (size4 & 0x000000ff);
 
 			/*fill the bytes to the buffers*/
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1),
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1[size1-1]),
 				mainServer->packetsSend[tempCount1].buffer + 8);
 
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2),
-				mainServer->packetsSend[tempCount1].buffer + 8 + DEFAULT_SUB_LAYER_LENGTH);
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2[size2-1]),
+				mainServer->packetsSend[tempCount1].buffer + 8 + size1);
 
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3),
-				mainServer->packetsSend[tempCount1].buffer + 8 + DEFAULT_SUB_LAYER_LENGTH * 2);
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3[size3-1]),
+				mainServer->packetsSend[tempCount1].buffer + 8 + size1+size2);
 
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4),
-				mainServer->packetsSend[tempCount1].buffer + 8 + DEFAULT_SUB_LAYER_LENGTH * 3);
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4[size4-1]),
+				mainServer->packetsSend[tempCount1].buffer + 8 + size1 + size2+ size3);
 			
-			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size1;
-			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size2;
-			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size3;
-			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size4;
+			mainServer->packetsSend[tempCount1].layerSizes[0] = size1;
+			mainServer->packetsSend[tempCount1].layerSizes[1] = size2;
+			mainServer->packetsSend[tempCount1].layerSizes[2] = size3;
+			mainServer->packetsSend[tempCount1].layerSizes[3] = size4;
 					
 		}
 
@@ -162,17 +162,17 @@ int main() {
 		HANDLE myHandle[4];
 
 		/*Creating multiple threads*/
-		for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+		for (tempCount1 = 0; tempCount1 < 1; tempCount1++) {
 			myHandle[tempCount1] = (HANDLE) _beginthreadex(0, 0, &myThreadSendData, &mainServer->packetsSend[tempCount1], 0, 0);
 		}
 
 		/*Wait for objects to be completed*/
-		for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+		for (tempCount1 = 0; tempCount1 < 1; tempCount1++) {
 			WaitForSingleObject(myHandle[tempCount1], INFINITE);
 		}
 		
 		/*Release the thread and resources used*/
-		for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+		for (tempCount1 = 0; tempCount1 < 1; tempCount1++) {
 			CloseHandle(myHandle[tempCount1]);
 		}
 

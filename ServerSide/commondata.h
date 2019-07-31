@@ -45,6 +45,8 @@
 #define TILE_NO_4_IND				7
 #define CHUNK_QUAL_IND				8	
 
+#define BYTES_FOR_PACKET_LENGTH		8
+
 
 #define LAYER_1						0
 #define LAYER_2						1
@@ -59,6 +61,8 @@ SOCKET 1,2,3,4 send data to the server*/
 #define SOCKET_2					2
 #define SOCKET_3					3
 #define SOCKET_4					4
+
+
 
 /*Each sub layer of a frame is 1024*10 long and
 each packet related to the 1s video chunk of tile is 
@@ -142,6 +146,7 @@ typedef struct tileBufferByte {
 }tileBufferByte;
 
 typedef struct dataPacketSend {
+	int dataPacketSize;
 	uint16_t layerSizes[NUM_OF_LAYERS];
 	uint8_t buffer[DEFAULT_PACKET_BUFFER];
 	SOCKET socket;

@@ -7,13 +7,15 @@ MainServer::MainServer() {}
 unsigned int __stdcall myThreadSendData(void* dataPacket)
 {
 	int iSendResult;
-	
+	int sizeOfPacket;
+
 	dataPacketSend &myDataPacket = *((dataPacketSend*)dataPacket);
-	
-	iSendResult = send(myDataPacket.socket, (const char*)myDataPacket.buffer, DEFAULT_PACKET_BUFFER, 0);
+	sizeOfPacket = myDataPacket.dataPacketSize;
+
+	iSendResult = send(myDataPacket.socket, (const char*)myDataPacket.buffer, sizeOfPacket, 0);
 
 	//cout << myDataPacket.layerSizes[0] << " "<<  myDataPacket.layerSizes[1] << " " << myDataPacket.layerSizes[2] << " " << myDataPacket.layerSizes[3] << endl;
-	cout <<"\n"<< iSendResult << endl;
+	cout <<"\n"<< iSendResult << sizeOfPacket << endl;
 
 	return 0;
 
@@ -138,22 +140,25 @@ int main() {
 			mainServer->packetsSend[tempCount1].buffer[7] = (size4 & 0x000000ff);
 
 			/*fill the bytes to the buffers*/
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1),
-				mainServer->packetsSend[tempCount1].buffer + 8);
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1[size1 - 1]),
+				mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH);
 
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2),
-				mainServer->packetsSend[tempCount1].buffer + 8 + DEFAULT_SUB_LAYER_LENGTH);
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2[size2 - 1]),
+				mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1);
 
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3),
-				mainServer->packetsSend[tempCount1].buffer + 8 + DEFAULT_SUB_LAYER_LENGTH * 2);
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3[size3 - 1]),
+				mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1 + size2);
 
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4), end(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4),
-				mainServer->packetsSend[tempCount1].buffer + 8 + DEFAULT_SUB_LAYER_LENGTH * 3);
+			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4[size4 - 1]),
+				mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1 + size2 + size3);
+
 			
-			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size1;
-			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size2;
-			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size3;
-			mainServer->packetsSend[tempCount1].layerSizes[tempCount2] = size4;
+			mainServer->packetsSend[tempCount1].layerSizes[0] = size1; 
+			mainServer->packetsSend[tempCount1].layerSizes[1] = size2;
+			mainServer->packetsSend[tempCount1].layerSizes[2] = size3;
+			mainServer->packetsSend[tempCount1].layerSizes[3] = size4;
+
+			mainServer->packetsSend->dataPacketSize = size1 + size2 + size3 + size4 + BYTES_FOR_PACKET_LENGTH;
 					
 		}
 

@@ -7,13 +7,16 @@ MainServer::MainServer() {}
 unsigned int __stdcall myThreadSendData(void* dataPacket)
 {
 	int iSendResult;
-	
+	int packetSize;
+
 	dataPacketSend &myDataPacket = *((dataPacketSend*)dataPacket);
-	
-	iSendResult = send(myDataPacket.socket, (const char*)myDataPacket.buffer, DEFAULT_PACKET_BUFFER, 0);
+	packetSize = myDataPacket.dataPacketSize;
+
+
+	iSendResult = send(myDataPacket.socket, (const char*)myDataPacket.buffer, packetSize, 0);
 
 	//cout << myDataPacket.layerSizes[0] << " "<<  myDataPacket.layerSizes[1] << " " << myDataPacket.layerSizes[2] << " " << myDataPacket.layerSizes[3] << endl;
-	cout <<"\n"<< iSendResult << endl;
+	cout << "\n" << iSendResult << endl;
 
 	return 0;
 
@@ -47,7 +50,7 @@ int main() {
 	SOCKET* AcceptSocket;
 	SOCKET* ListenSocket;
 	MainServer* mainServer = new MainServer();
-	
+
 
 
 	mainServer->i = 100;
@@ -76,11 +79,11 @@ int main() {
 	else
 		av_log(NULL, AV_LOG_INFO, "Read fileReader3 unsucessful");*/
 
-	/***
-	This code section should have the HTTP server communication module. Server module returns the current tile positions, chunk number and
-	quality to be streamed from the server. These values are directly passed to the tileMerger object which in turn returns the selected
-	tiles from SD, HD or 4K database.
-	***/
+		/***
+		This code section should have the HTTP server communication module. Server module returns the current tile positions, chunk number and
+		quality to be streamed from the server. These values are directly passed to the tileMerger object which in turn returns the selected
+		tiles from SD, HD or 4K database.
+		***/
 	TileMerger* tilemerger = new TileMerger(&mainServer->tileBufferByte1s, mainServer->videoDataBases);
 
 	/*After reading from tilemerger funtion, data is tranfered to the
@@ -99,92 +102,101 @@ int main() {
 		AcceptSocket = serverSideCommunicator->readFrameRequest(mainServer->chunkData);
 		assert(AcceptSocket != NULL);
 
-		x1 = tilemerger->tileXCor[mainServer->chunkData[TILE_NO_1_IND]];
-		y1 = tilemerger->tileYCor[mainServer->chunkData[TILE_NO_1_IND]];
-		x2 = tilemerger->tileXCor[mainServer->chunkData[TILE_NO_2_IND]];
-		y2 = tilemerger->tileYCor[mainServer->chunkData[TILE_NO_2_IND]];
-		x3 = tilemerger->tileXCor[mainServer->chunkData[TILE_NO_3_IND]];
-		y3 = tilemerger->tileYCor[mainServer->chunkData[TILE_NO_3_IND]];
-		x4 = tilemerger->tileXCor[mainServer->chunkData[TILE_NO_4_IND]];
-		y4 = tilemerger->tileYCor[mainServer->chunkData[TILE_NO_4_IND]];
+		retRequestFrmClient = serverSideCommunicator->getReceivedBytes();
+		if (retRequestFrmClient > 0) {
 
-		chunk = (mainServer->chunkData[CHUNK_FRAME_IND_1] << 24) |
-			(mainServer->chunkData[CHUNK_FRAME_IND_2] << 16) |
-			(mainServer->chunkData[CHUNK_FRAME_IND_3] << 8) |
-			(mainServer->chunkData[CHUNK_FRAME_IND_4]);
-		quality = mainServer->chunkData[CHUNK_QUAL_IND];
+			x1 = tilemerger->tileXCor[mainServer->chunkData[TILE_NO_1_IND]];
+			y1 = tilemerger->tileYCor[mainServer->chunkData[TILE_NO_1_IND]];
+			x2 = tilemerger->tileXCor[mainServer->chunkData[TILE_NO_2_IND]];
+			y2 = tilemerger->tileYCor[mainServer->chunkData[TILE_NO_2_IND]];
+			x3 = tilemerger->tileXCor[mainServer->chunkData[TILE_NO_3_IND]];
+			y3 = tilemerger->tileYCor[mainServer->chunkData[TILE_NO_3_IND]];
+			x4 = tilemerger->tileXCor[mainServer->chunkData[TILE_NO_4_IND]];
+			y4 = tilemerger->tileYCor[mainServer->chunkData[TILE_NO_4_IND]];
+
+			chunk = (mainServer->chunkData[CHUNK_FRAME_IND_1] << 24) |
+				(mainServer->chunkData[CHUNK_FRAME_IND_2] << 16) |
+				(mainServer->chunkData[CHUNK_FRAME_IND_3] << 8) |
+				(mainServer->chunkData[CHUNK_FRAME_IND_4]);
+			quality = mainServer->chunkData[CHUNK_QUAL_IND];
 
 
-		/*Merging the tiles to a byte buffer where all the data can be sent parallely later*/
-		tilemerger->setTiles(x1, y1, x2, y2, x3, y3, x4, y4, quality, chunk);
-		tilemerger->mergeTiles();
+			/*Merging the tiles to a byte buffer where all the data can be sent parallely later*/
+			tilemerger->setTiles(x1, y1, x2, y2, x3, y3, x4, y4, quality, chunk);
+			tilemerger->mergeTiles();
 
-		/*creating array of dataPacketSend to be sent to the client*/
-		for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
-			mainServer->packetsSend[tempCount1].socket = AcceptSocket[tempCount1+1];
+			/*creating array of dataPacketSend to be sent to the client*/
+			for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+				mainServer->packetsSend[tempCount1].socket = AcceptSocket[tempCount1 + 1];
 
-			uint16_t size1 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer1Size;
-			uint16_t size2 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer2Size;
-			uint16_t size3 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer3Size;
-			uint16_t size4 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer4Size;
+				uint16_t size1 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer1Size;
+				uint16_t size2 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer2Size;
+				uint16_t size3 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer3Size;
+				uint16_t size4 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer4Size;
 
-			mainServer->packetsSend[tempCount1].buffer[0] = (size1 & 0x0000ff00) >> 8;
-			mainServer->packetsSend[tempCount1].buffer[1] = (size1 & 0x000000ff);
-			mainServer->packetsSend[tempCount1].buffer[2] = (size2 & 0x0000ff00) >> 8;
-			mainServer->packetsSend[tempCount1].buffer[3] = (size2 & 0x000000ff);
-			mainServer->packetsSend[tempCount1].buffer[4] = (size3 & 0x0000ff00) >> 8;
-			mainServer->packetsSend[tempCount1].buffer[5] = (size3 & 0x000000ff);
-			mainServer->packetsSend[tempCount1].buffer[6] = (size4 & 0x0000ff00) >> 8;
-			mainServer->packetsSend[tempCount1].buffer[7] = (size4 & 0x000000ff);
+				mainServer->packetsSend[tempCount1].buffer[0] = (size1 & 0x0000ff00) >> 8;
+				mainServer->packetsSend[tempCount1].buffer[1] = (size1 & 0x000000ff);
+				mainServer->packetsSend[tempCount1].buffer[2] = (size2 & 0x0000ff00) >> 8;
+				mainServer->packetsSend[tempCount1].buffer[3] = (size2 & 0x000000ff);
+				mainServer->packetsSend[tempCount1].buffer[4] = (size3 & 0x0000ff00) >> 8;
+				mainServer->packetsSend[tempCount1].buffer[5] = (size3 & 0x000000ff);
+				mainServer->packetsSend[tempCount1].buffer[6] = (size4 & 0x0000ff00) >> 8;
+				mainServer->packetsSend[tempCount1].buffer[7] = (size4 & 0x000000ff);
 
-			/*fill the bytes to the buffers*/
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1[size1-1]),
-				mainServer->packetsSend[tempCount1].buffer + 8);
+				/*fill the bytes to the buffers*/
+				copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1[size1 - 1]),
+					mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH);
 
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2[size2-1]),
-				mainServer->packetsSend[tempCount1].buffer + 8 + size1);
+				copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2[size2 - 1]),
+					mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1);
 
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3[size3-1]),
-				mainServer->packetsSend[tempCount1].buffer + 8 + size1+size2);
+				copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer3[size3 - 1]),
+					mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1 + size2);
 
-			copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4[size4-1]),
-				mainServer->packetsSend[tempCount1].buffer + 8 + size1 + size2+ size3);
+				copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4[size4 - 1]),
+					mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1 + size2 + size3);
+
+				mainServer->packetsSend[tempCount1].layerSizes[0] = size1;
+				mainServer->packetsSend[tempCount1].layerSizes[1] = size2;
+				mainServer->packetsSend[tempCount1].layerSizes[2] = size3;
+				mainServer->packetsSend[tempCount1].layerSizes[3] = size4;
+
+				mainServer->packetsSend[tempCount1].dataPacketSize = size1 + size2 + size3 + size4 + BYTES_FOR_PACKET_LENGTH;
 			
-			mainServer->packetsSend[tempCount1].layerSizes[0] = size1;
-			mainServer->packetsSend[tempCount1].layerSizes[1] = size2;
-			mainServer->packetsSend[tempCount1].layerSizes[2] = size3;
-			mainServer->packetsSend[tempCount1].layerSizes[3] = size4;
-					
-		}
+			}
 
-	
-		/*Send tilebuffer seperately to the client using multiple threads*/
-		HANDLE myHandle[4];
 
-		/*Creating multiple threads*/
-		for (tempCount1 = 0; tempCount1 < 1; tempCount1++) {
-			myHandle[tempCount1] = (HANDLE) _beginthreadex(0, 0, &myThreadSendData, &mainServer->packetsSend[tempCount1], 0, 0);
-		}
+			/*Send tilebuffer seperately to the client using multiple threads*/
+			HANDLE myHandle[4];
 
-		/*Wait for objects to be completed*/
-		for (tempCount1 = 0; tempCount1 < 1; tempCount1++) {
-			WaitForSingleObject(myHandle[tempCount1], INFINITE);
-		}
-		
-		/*Release the thread and resources used*/
-		for (tempCount1 = 0; tempCount1 < 1; tempCount1++) {
-			CloseHandle(myHandle[tempCount1]);
-		}
+			/*Creating multiple threads*/
+			for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+				myHandle[tempCount1] = (HANDLE)_beginthreadex(0, 0, &myThreadSendData, &mainServer->packetsSend[tempCount1], 0, 0);
+			}
 
-		//cout << "Tile Merged" << endl;
-		
+			/*Wait for objects to be completed*/
+			for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+				WaitForSingleObject(myHandle[tempCount1], INFINITE);
+			}
+
+			/*Release the thread and resources used*/
+			for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+				CloseHandle(myHandle[tempCount1]);
+			}
+
+			//cout << "Tile Merged" << endl;
+
+			
+		}
 		memset(mainServer->chunkData, 0, sizeof mainServer->chunkData);
-		
+		memset(&(mainServer->tileBufferByte1s), 0, sizeof mainServer->tileBufferByte1s);
+		memset(&(mainServer->packetsSend), 0, sizeof mainServer->packetsSend);
+
 	} while (retRequestFrmClient > 0);
-	
-	
+
+
 	//closesocket(serverSideCommunicator->ListenSocket);
-	
+
 
 	return 0;
 }

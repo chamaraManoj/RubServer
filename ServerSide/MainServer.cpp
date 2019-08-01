@@ -164,7 +164,7 @@ int main() {
 				mainServer->packetsSend[tempCount1].dataPacketSize = size1 + size2 + size3 + size4 + BYTES_FOR_PACKET_LENGTH;
 			
 			}
-
+			/**/
 
 			/*Send tilebuffer seperately to the client using multiple threads*/
 			HANDLE myHandle[4];

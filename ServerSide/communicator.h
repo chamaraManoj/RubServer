@@ -57,6 +57,7 @@ public:
 	SOCKET* intializeServer();
 	SOCKET*  readFrameRequest(char (&receiveBuffer)[DEFAULT_BUFLEN_RECEIVE]);
 	int sendData(SOCKET socket, char* recvbuf, int resul);
+	int getReceivedBytes();
 
 	// the listening socket to be created
 	SOCKET ListenSocket[NUM_OF_TOTAL_PORTS];

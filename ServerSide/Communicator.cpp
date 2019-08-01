@@ -155,6 +155,10 @@ SOCKET* Communicator::readFrameRequest(char (&receiveBuffer)[DEFAULT_BUFLEN_RECE
 	return AcceptSocket;
 }
 
+int Communicator::getReceivedBytes() {
+	return this->iResult;
+}
+
 /*int Communicator::sendData(SOCKET socket, char* recvbuf,int result) {
 	iSendResult = send(this->AcceptSocket, this->recvbuf, this->iResult, 0);
 	if (this->iSendResult == SOCKET_ERROR) {

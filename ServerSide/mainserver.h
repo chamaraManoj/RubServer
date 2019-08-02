@@ -25,7 +25,8 @@ public:
 	string filePaths[QUALITY_LEVEL];
 	char chunkData[DEFAULT_BUFLEN_RECEIVE];
 
-	dataPacketSend packetsSend[NUM_OF_SEND_THREADS]; //NUM_OF_TILES is the same value
+	dataPacketSendLayer packetsSendLayer[4]; //NUM_OF_TILES is the same value
+	//dataPacketSendELayer packetsSendELayer[3];
 
 
 };

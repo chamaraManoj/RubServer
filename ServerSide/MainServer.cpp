@@ -9,7 +9,7 @@ unsigned int __stdcall myThreadSendData(void* dataPacket)
 	int iSendResult;
 	int packetSize;
 
-	dataPacketSend &myDataPacket = *((dataPacketSend*)dataPacket);
+	dataPacketSendLayer&myDataPacket = *((dataPacketSendLayer*)dataPacket);
 	packetSize = myDataPacket.dataPacketSize;
 
 
@@ -54,8 +54,8 @@ int main() {
 
 
 	mainServer->i = 100;
-	mainServer->filePaths[0] = "E:\\SelfLearning\\Rubiks\\RubiksVideos\\processedVideo_SD";
-	//mainServer->filePaths[0] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_SD";
+	//mainServer->filePaths[0] = "E:\\SelfLearning\\Rubiks\\RubiksVideos\\processedVideo_SD";
+	mainServer->filePaths[0] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_SD";
 	//mainServer.filePaths[1] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_HD";
 	//mainServer.filePaths[2] = "H:\\My_Codes\\Rubiks_implementation\\RubiksVideos\\processedVideo_4K";
 
@@ -145,13 +145,13 @@ int main() {
 					totLayerSize[3] += mainServer->tileBufferByteSend1s.layerSize[tempCount1];
 			}
 
-			for (tempCount1 = 0; tempCount1 < NUM_OF_LAYERS; tempCount1++)
-				mainServer->packetsSend->dataPacketSize = totLayerSize[tempCount1];
+			/*for (tempCount1 = 0; tempCount1 < NUM_OF_LAYERS; tempCount1++)
+				mainServer->packetsSend->dataPacketSize = totLayerSize[tempCount1];*/
 		
 				
 			for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
 
-				mainServer->packetsSend[tempCount1].socket = AcceptSocket[tempCount1 + 1];
+				
 
 				uint16_t size1 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer1Size;
 				uint16_t size2 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer2Size;
@@ -169,33 +169,54 @@ int main() {
 				mainServer->packetsSend[tempCount1].buffer[6] = (size4 & 0x0000ff00) >> 8;
 				mainServer->packetsSend[tempCount1].buffer[7] = (size4 & 0x000000ff);*/
 
-				mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+0] = (size1 & 0xff000000) >> 24;
+				/*mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+0] = (size1 & 0xff000000) >> 24;
 				mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+1] = (size1 & 0x00ff0000) >> 16;
 				mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+2] = (size1 & 0x0000ff00) >> 8;
-				mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+3] = (size1 & 0x000000ff);
+				mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+3] = (size1 & 0x000000ff);*/
 
-				int cumlativeSum = 0;
+				
 				/*Fill the baseLayer value*/
 				if (tempCount1 == 0) {
-					int tempSize;		
-					for (tempCount2 == 0; tempCount2 < NUM_OF_TILES_BASE_LAYER; tempCount2++) {
+					/*Assign the socket*/
+					int cumlativeByteSum = 0;
+					mainServer->packetsSendLayer[tempCount1].socket = AcceptSocket[tempCount1 + 1];
+
+						
+					for (tempCount2 = 0; tempCount2 < NUM_OF_TILES_BASE_LAYER; tempCount2++) {
+						mainServer->packetsSendLayer[tempCount1].buffer[cumlativeByteSum++] = ((mainServer->tileBufferByteSend1s.layerSize[tempCount2]) & 0x0000ff00) >> 8;
+						mainServer->packetsSendLayer[tempCount1].buffer[cumlativeByteSum++] = ((mainServer->tileBufferByteSend1s.layerSize[tempCount2]) & 0x000000ff);
+					}
+
+					int tempSize;
+					for (tempCount2 = 0; tempCount2 < NUM_OF_TILES_BASE_LAYER; tempCount2++) {
 						tempSize = mainServer->tileBufferByteSend1s.layerSize[tempCount2];
 						copy(begin(mainServer->tileBufferByteSend1s.layerBufferArray[tempCount2].layerBuffer), 
 							&(mainServer->tileBufferByteSend1s.layerBufferArray[tempCount2].layerBuffer[ tempSize- 1]),
-							mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH+ cumlativeSum);
-						cumlativeSum += tempSize;
+							mainServer->packetsSendLayer[tempCount1].buffer + cumlativeByteSum);
+						cumlativeByteSum += tempSize;
 					}
+					mainServer->packetsSendLayer[tempCount1].dataPacketSize = totLayerSize[tempCount1] + 2 * NUM_OF_TILES_BASE_LAYER;
 				}
 				/*Fill the enhance layer sizes*/
 				else {
+					int cumlativeByteSum = 0;
+					/*Assign the socket*/
+					mainServer->packetsSendLayer[tempCount1].socket = AcceptSocket[tempCount1 + 1];
+
+					for (tempCount2 = 0; tempCount2 < NUM_OF_FOV_TILES; tempCount2++) {
+						mainServer->packetsSendLayer[tempCount1].buffer[cumlativeByteSum++] = ((mainServer->tileBufferByteSend1s.layerSize[NUM_OF_TILES_BASE_LAYER+ (tempCount1-1) * NUM_OF_FOV_TILES+tempCount2]) & 0x0000ff00) >> 8;
+						mainServer->packetsSendLayer[tempCount1].buffer[cumlativeByteSum++] = ((mainServer->tileBufferByteSend1s.layerSize[NUM_OF_TILES_BASE_LAYER+ (tempCount1-1) * NUM_OF_FOV_TILES+tempCount2]) & 0x000000ff);
+					}
+
 					int tempSize;
 					for (tempCount2 == 0; tempCount2 < NUM_OF_FOV_TILES; tempCount2++) {
-						tempSize = mainServer->tileBufferByteSend1s.layerSize[NUM_OF_TILES_BASE_LAYER+ tempCount1*NUM_OF_LAYERS+tempCount2];
-						copy(begin(mainServer->tileBufferByteSend1s.layerBufferArray[NUM_OF_TILES_BASE_LAYER + tempCount1 * NUM_OF_LAYERS + tempCount2].layerBuffer),
-							&(mainServer->tileBufferByteSend1s.layerBufferArray[NUM_OF_TILES_BASE_LAYER + tempCount1 * NUM_OF_LAYERS + tempCount2].layerBuffer[tempSize - 1]),
-							mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + cumlativeSum);
-						cumlativeSum += tempSize;
+						tempSize = mainServer->tileBufferByteSend1s.layerSize[NUM_OF_TILES_BASE_LAYER+ (tempCount1-1) * NUM_OF_FOV_TILES + tempCount2];
+						copy(begin(mainServer->tileBufferByteSend1s.layerBufferArray[NUM_OF_TILES_BASE_LAYER + (tempCount1 - 1) * NUM_OF_LAYERS + tempCount2].layerBuffer),
+							&(mainServer->tileBufferByteSend1s.layerBufferArray[NUM_OF_TILES_BASE_LAYER + (tempCount1-1) * NUM_OF_LAYERS + tempCount2].layerBuffer[tempSize - 1]),
+							mainServer->packetsSendLayer[tempCount1-1].buffer + cumlativeByteSum);
+						cumlativeByteSum += tempSize;
 					}
+					mainServer->packetsSendLayer[tempCount1].dataPacketSize = totLayerSize[tempCount1] + 2 * NUM_OF_FOV_TILES;
 				}
 				
 
@@ -212,16 +233,6 @@ int main() {
 				copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4[size4 - 1]),
 					mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1 + size2 + size3);*/
 
-
-
-
-				mainServer->packetsSend[tempCount1].layerSizes[0] = size1;
-				mainServer->packetsSend[tempCount1].layerSizes[1] = size2;
-				mainServer->packetsSend[tempCount1].layerSizes[2] = size3;
-				mainServer->packetsSend[tempCount1].layerSizes[3] = size4;
-
-				mainServer->packetsSend[tempCount1].dataPacketSize = size1 + size2 + size3 + size4 + BYTES_FOR_PACKET_LENGTH;
-			
 			}
 			/**/
 
@@ -230,7 +241,8 @@ int main() {
 
 			/*Creating multiple threads*/
 			for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
-				myHandle[tempCount1] = (HANDLE)_beginthreadex(0, 0, &myThreadSendData, &mainServer->packetsSend[tempCount1], 0, 0);
+				
+					myHandle[tempCount1] = (HANDLE)_beginthreadex(0, 0, &myThreadSendData, &mainServer->packetsSendLayer[tempCount1], 0, 0);
 			}
 
 			/*Wait for objects to be completed*/
@@ -249,7 +261,8 @@ int main() {
 		}
 		memset(mainServer->chunkData, 0, sizeof mainServer->chunkData);
 		memset(&(mainServer->tileBufferByte1s), 0, sizeof mainServer->tileBufferByte1s);
-		memset(&(mainServer->packetsSend), 0, sizeof mainServer->packetsSend);
+		memset(&(mainServer->packetsSendLayer), 0, sizeof mainServer->packetsSendLayer);
+		
 
 	} while (retRequestFrmClient > 0);
 

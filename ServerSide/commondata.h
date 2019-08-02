@@ -45,40 +45,43 @@
 #define TILE_NO_4_IND				7
 #define CHUNK_QUAL_IND				8	
 
-#define BYTES_FOR_PACKET_LENGTH		32
 
 
-#define LAYER_1						0
-#define LAYER_2						1
-#define LAYER_3						2
-#define LAYER_4						3
+
+#define LAYER_1							0
+#define LAYER_2							1
+#define LAYER_3							2
+#define LAYER_4							3
 
 /*Communication model uses 5 sockets
 SOCKET 0 listen to the request from the server
 SOCKET 1,2,3,4 send data to the server*/
-#define SOCKET_0					0
-#define SOCKET_1					1
-#define SOCKET_2					2
-#define SOCKET_3					3
-#define SOCKET_4					4
+#define SOCKET_0						0
+#define SOCKET_1						1
+#define SOCKET_2						2
+#define SOCKET_3						3
+#define SOCKET_4						4
 
 
 
 /*Each sub layer of a frame is 1024*10 long and
 each packet related to the 1s video chunk of tile is 
 1024*10*4 + 4*2 long*/
-#define DEFAULT_SUB_LAYER_LENGTH	1024*8
-#define DEFAULT_PACKET_BUFFER		DEFAULT_SUB_LAYER_LENGTH*20 + DEFAULT_SUB_LAYER_LENGTH*12 + 8*4
+#define NUM_OF_SEND_THREADS				4
+#define NUM_OF_TOTAL_PORTS				5 //including the listening port
+#define NUM_OF_TILES_BASE_LAYER			NUM_OF_COL*NUM_OF_ROWS
+#define NUM_OF_ENHC_LAYER				3
+#define NUM_OF_TOT_TILES				NUM_OF_TILES_BASE_LAYER + NUM_OF_ENHC_LAYER * 4
+
+#define NUM_OF_FOV_TILES				4
+#define NUM_OF_LAYERS					4
+
+#define DEFAULT_SUB_LAYER_LENGTH		1024*8
+#define DEFAULT_PACKET_BUFFER_B_LAYER	DEFAULT_SUB_LAYER_LENGTH*NUM_OF_TILES_BASE_LAYER + 2*NUM_OF_TILES_BASE_LAYER  //2*20 => 2 Bytes * 20 for layer length data
+#define DEFAULT_PACKET_BUFFER_E_LAYER	DEFAULT_SUB_LAYER_LENGTH*NUM_OF_FOV_TILES + 2*NUM_OF_FOV_TILES
 
 
-#define NUM_OF_SEND_THREADS			1
-#define NUM_OF_TOTAL_PORTS			5 //including the listening port
-#define NUM_OF_TILES_BASE_LAYER		NUM_OF_COL*NUM_OF_ROWS
-#define NUM_OF_TILES_ENHC_LAYER		3
-#define NUM_OF_TOT_TILES			NUM_OF_TILES_BASE_LAYER + NUM_OF_TILES_ENHC_LAYER * 4
 
-#define NUM_OF_FOV_TILES	4
-#define NUM_OF_LAYERS		4
 
 
 using namespace std;
@@ -141,32 +144,37 @@ typedef struct videoDataBase {
 	chunk60SecSize tilesSize[4][5];
 }videoDataBase;
 
+typedef struct tileBufferByte {
+	tile1SecByte tileBuffer[4];
+	tile1SecSize tileBufferSize[4];
+}tileBufferByte;
 /*typedef struct videoDataBaseSize {
 	chunk60SecSize tilesSize[4][5];
 }videoDataBaseSize;
 */
+
+/*===================================================*/
 typedef struct layer {
 	uint8_t layerBuffer[DEFAULT_SUB_LAYER_LENGTH];
 }layer;
-
-
 
 typedef struct tileBufferByteSend {
 	layer layerBufferArray[NUM_OF_TOT_TILES];
 	uint16_t layerSize[NUM_OF_TOT_TILES];
 }tileBufferByteSend;
 
-
-
-typedef struct tileBufferByte {
-	tile1SecByte tileBuffer[4];
-	tile1SecSize tileBufferSize[4];
-}tileBufferByte;
-
-typedef struct dataPacketSend {
+typedef struct dataPacketSendBLayer {
 	int dataPacketSize;
 	uint16_t layerSizes[NUM_OF_LAYERS];
-	uint8_t buffer[DEFAULT_PACKET_BUFFER];
+	uint8_t buffer[DEFAULT_PACKET_BUFFER_B_LAYER];
 	SOCKET socket;
-}dataPacketSend;
+}dataPacketSendLayer;
+
+/*typedef struct dataPacketSendELayer {
+	int dataPacketSize;
+	uint16_t layerSizes[NUM_OF_LAYERS];
+	uint8_t buffer[DEFAULT_PACKET_BUFFER_E_LAYER];
+	SOCKET socket;
+}dataPacketSendELayer;*/
+/*==================================================*/
 #endif // !COMMONDATA_HL

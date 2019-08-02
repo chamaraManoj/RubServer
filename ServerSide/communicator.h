@@ -24,8 +24,8 @@ each tile contains above data to be sent to the client over Wifi*/
 #define DEFAULT_PORT_3 5553
 #define DEFAULT_PORT_4 5554
 
-#define IP_ADDRESS "10.130.1.229"
-//#define IP_ADDRESS "10.1.1.35"
+//#define IP_ADDRESS "10.130.1.229"
+#define IP_ADDRESS "10.1.1.35"
 
 class Communicator {
 private:

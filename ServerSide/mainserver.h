@@ -20,6 +20,7 @@ public:
 	MainServer();
 	int i;
 	tileBufferByte tileBufferByte1s;
+	tileBufferByteSend tileBufferByteSend1s;
 	videoDataBase videoDataBases[3];
 	string filePaths[QUALITY_LEVEL];
 	char chunkData[DEFAULT_BUFLEN_RECEIVE];

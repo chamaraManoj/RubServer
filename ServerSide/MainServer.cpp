@@ -84,7 +84,7 @@ int main() {
 		quality to be streamed from the server. These values are directly passed to the tileMerger object which in turn returns the selected
 		tiles from SD, HD or 4K database.
 		***/
-	TileMerger* tilemerger = new TileMerger(&mainServer->tileBufferByte1s, mainServer->videoDataBases);
+	TileMerger* tilemerger = new TileMerger(&mainServer->tileBufferByte1s, mainServer->videoDataBases,&mainServer->tileBufferByteSend1s);
 
 	/*After reading from tilemerger funtion, data is tranfered to the
 	Communicaotr modle to be sent to the client*/
@@ -126,25 +126,81 @@ int main() {
 			tilemerger->mergeTiles();
 
 			/*creating array of dataPacketSend to be sent to the client*/
+			
+
+			int totLayerSize[NUM_OF_LAYERS];
+			for (tempCount1 = 0; tempCount1 < NUM_OF_LAYERS; tempCount1++) 
+				totLayerSize[tempCount1] = 0;
+			
+
+			/*Get the total number of bytes send*/
+			for (tempCount1 = 0; tempCount1 < NUM_OF_TOT_TILES; tempCount1++) {
+				if(tempCount1< NUM_OF_TILES_BASE_LAYER)
+					totLayerSize[0] += mainServer->tileBufferByteSend1s.layerSize[tempCount1];
+				else if(tempCount1>= NUM_OF_TILES_BASE_LAYER && tempCount1< NUM_OF_TILES_BASE_LAYER+ NUM_OF_FOV_TILES)
+					totLayerSize[1] += mainServer->tileBufferByteSend1s.layerSize[tempCount1];
+				else if (tempCount1 >= NUM_OF_TILES_BASE_LAYER + NUM_OF_FOV_TILES && tempCount1 < NUM_OF_TILES_BASE_LAYER + NUM_OF_FOV_TILES * 2)
+					totLayerSize[2] += mainServer->tileBufferByteSend1s.layerSize[tempCount1];
+				else if (tempCount1 >= NUM_OF_TILES_BASE_LAYER + NUM_OF_FOV_TILES*2 && tempCount1 < NUM_OF_TILES_BASE_LAYER + NUM_OF_FOV_TILES * 3)
+					totLayerSize[3] += mainServer->tileBufferByteSend1s.layerSize[tempCount1];
+			}
+
+			for (tempCount1 = 0; tempCount1 < NUM_OF_LAYERS; tempCount1++)
+				mainServer->packetsSend->dataPacketSize = totLayerSize[tempCount1];
+		
+				
 			for (tempCount1 = 0; tempCount1 < NUM_OF_SEND_THREADS; tempCount1++) {
+
 				mainServer->packetsSend[tempCount1].socket = AcceptSocket[tempCount1 + 1];
 
 				uint16_t size1 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer1Size;
 				uint16_t size2 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer2Size;
 				uint16_t size3 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer3Size;
 				uint16_t size4 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer4Size;
-
-				mainServer->packetsSend[tempCount1].buffer[0] = (size1 & 0x0000ff00) >> 8;
+				
+				/*Filling the Layer Sizes*/
+				
+				/*mainServer->packetsSend[tempCount1].buffer[0] = (size1 & 0x0000ff00) >> 8;
 				mainServer->packetsSend[tempCount1].buffer[1] = (size1 & 0x000000ff);
 				mainServer->packetsSend[tempCount1].buffer[2] = (size2 & 0x0000ff00) >> 8;
 				mainServer->packetsSend[tempCount1].buffer[3] = (size2 & 0x000000ff);
 				mainServer->packetsSend[tempCount1].buffer[4] = (size3 & 0x0000ff00) >> 8;
 				mainServer->packetsSend[tempCount1].buffer[5] = (size3 & 0x000000ff);
 				mainServer->packetsSend[tempCount1].buffer[6] = (size4 & 0x0000ff00) >> 8;
-				mainServer->packetsSend[tempCount1].buffer[7] = (size4 & 0x000000ff);
+				mainServer->packetsSend[tempCount1].buffer[7] = (size4 & 0x000000ff);*/
+
+				mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+0] = (size1 & 0xff000000) >> 24;
+				mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+1] = (size1 & 0x00ff0000) >> 16;
+				mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+2] = (size1 & 0x0000ff00) >> 8;
+				mainServer->packetsSend[tempCount1].buffer[tempCount1*NUM_OF_LAYERS+3] = (size1 & 0x000000ff);
+
+				int cumlativeSum = 0;
+				/*Fill the baseLayer value*/
+				if (tempCount1 == 0) {
+					int tempSize;		
+					for (tempCount2 == 0; tempCount2 < NUM_OF_TILES_BASE_LAYER; tempCount2++) {
+						tempSize = mainServer->tileBufferByteSend1s.layerSize[tempCount2];
+						copy(begin(mainServer->tileBufferByteSend1s.layerBufferArray[tempCount2].layerBuffer), 
+							&(mainServer->tileBufferByteSend1s.layerBufferArray[tempCount2].layerBuffer[ tempSize- 1]),
+							mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH+ cumlativeSum);
+						cumlativeSum += tempSize;
+					}
+				}
+				/*Fill the enhance layer sizes*/
+				else {
+					int tempSize;
+					for (tempCount2 == 0; tempCount2 < NUM_OF_FOV_TILES; tempCount2++) {
+						tempSize = mainServer->tileBufferByteSend1s.layerSize[NUM_OF_TILES_BASE_LAYER+ tempCount1*NUM_OF_LAYERS+tempCount2];
+						copy(begin(mainServer->tileBufferByteSend1s.layerBufferArray[NUM_OF_TILES_BASE_LAYER + tempCount1 * NUM_OF_LAYERS + tempCount2].layerBuffer),
+							&(mainServer->tileBufferByteSend1s.layerBufferArray[NUM_OF_TILES_BASE_LAYER + tempCount1 * NUM_OF_LAYERS + tempCount2].layerBuffer[tempSize - 1]),
+							mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + cumlativeSum);
+						cumlativeSum += tempSize;
+					}
+				}
+				
 
 				/*fill the bytes to the buffers*/
-				copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1[size1 - 1]),
+				/*copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer1[size1 - 1]),
 					mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH);
 
 				copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer2[size2 - 1]),
@@ -154,7 +210,10 @@ int main() {
 					mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1 + size2);
 
 				copy(begin(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4), &(mainServer->tileBufferByte1s.tileBuffer[tempCount1].subLayer4[size4 - 1]),
-					mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1 + size2 + size3);
+					mainServer->packetsSend[tempCount1].buffer + BYTES_FOR_PACKET_LENGTH + size1 + size2 + size3);*/
+
+
+
 
 				mainServer->packetsSend[tempCount1].layerSizes[0] = size1;
 				mainServer->packetsSend[tempCount1].layerSizes[1] = size2;

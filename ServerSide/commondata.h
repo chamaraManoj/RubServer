@@ -45,7 +45,7 @@
 #define TILE_NO_4_IND				7
 #define CHUNK_QUAL_IND				8	
 
-#define BYTES_FOR_PACKET_LENGTH		8
+#define BYTES_FOR_PACKET_LENGTH		32
 
 
 #define LAYER_1						0
@@ -67,12 +67,18 @@ SOCKET 1,2,3,4 send data to the server*/
 /*Each sub layer of a frame is 1024*10 long and
 each packet related to the 1s video chunk of tile is 
 1024*10*4 + 4*2 long*/
-#define DEFAULT_SUB_LAYER_LENGTH	1024*10
-#define DEFAULT_PACKET_BUFFER		1024*10*4 + 4*2
+#define DEFAULT_SUB_LAYER_LENGTH	1024*8
+#define DEFAULT_PACKET_BUFFER		DEFAULT_SUB_LAYER_LENGTH*20 + DEFAULT_SUB_LAYER_LENGTH*12 + 8*4
 
 
-#define NUM_OF_SEND_THREADS			4
+#define NUM_OF_SEND_THREADS			1
 #define NUM_OF_TOTAL_PORTS			5 //including the listening port
+#define NUM_OF_TILES_BASE_LAYER		NUM_OF_COL*NUM_OF_ROWS
+#define NUM_OF_TILES_ENHC_LAYER		3
+#define NUM_OF_TOT_TILES			NUM_OF_TILES_BASE_LAYER + NUM_OF_TILES_ENHC_LAYER * 4
+
+#define NUM_OF_FOV_TILES	4
+#define NUM_OF_LAYERS		4
 
 
 using namespace std;
@@ -139,6 +145,18 @@ typedef struct videoDataBase {
 	chunk60SecSize tilesSize[4][5];
 }videoDataBaseSize;
 */
+typedef struct layer {
+	uint8_t layerBuffer[DEFAULT_SUB_LAYER_LENGTH];
+}layer;
+
+
+
+typedef struct tileBufferByteSend {
+	layer layerBufferArray[NUM_OF_TOT_TILES];
+	uint16_t layerSize[NUM_OF_TOT_TILES];
+}tileBufferByteSend;
+
+
 
 typedef struct tileBufferByte {
 	tile1SecByte tileBuffer[4];

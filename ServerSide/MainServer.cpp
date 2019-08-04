@@ -153,10 +153,10 @@ int main() {
 
 				
 
-				uint16_t size1 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer1Size;
+				/*uint16_t size1 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer1Size;
 				uint16_t size2 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer2Size;
 				uint16_t size3 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer3Size;
-				uint16_t size4 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer4Size;
+				uint16_t size4 = mainServer->tileBufferByte1s.tileBufferSize[tempCount1].sublayer4Size;*/
 				
 				/*Filling the Layer Sizes*/
 				
@@ -191,7 +191,7 @@ int main() {
 					for (tempCount2 = 0; tempCount2 < NUM_OF_TILES_BASE_LAYER; tempCount2++) {
 						tempSize = mainServer->tileBufferByteSend1s.layerSize[tempCount2];
 						copy(begin(mainServer->tileBufferByteSend1s.layerBufferArray[tempCount2].layerBuffer), 
-							&(mainServer->tileBufferByteSend1s.layerBufferArray[tempCount2].layerBuffer[ tempSize- 1]),
+							&(mainServer->tileBufferByteSend1s.layerBufferArray[tempCount2].layerBuffer[ tempSize]),
 							mainServer->packetsSendLayer[tempCount1].buffer + cumlativeByteSum);
 						cumlativeByteSum += tempSize;
 					}
@@ -209,11 +209,11 @@ int main() {
 					}
 
 					int tempSize;
-					for (tempCount2 == 0; tempCount2 < NUM_OF_FOV_TILES; tempCount2++) {
+					for (tempCount2 = 0; tempCount2 < NUM_OF_FOV_TILES; tempCount2++) {
 						tempSize = mainServer->tileBufferByteSend1s.layerSize[NUM_OF_TILES_BASE_LAYER+ (tempCount1-1) * NUM_OF_FOV_TILES + tempCount2];
 						copy(begin(mainServer->tileBufferByteSend1s.layerBufferArray[NUM_OF_TILES_BASE_LAYER + (tempCount1 - 1) * NUM_OF_LAYERS + tempCount2].layerBuffer),
-							&(mainServer->tileBufferByteSend1s.layerBufferArray[NUM_OF_TILES_BASE_LAYER + (tempCount1-1) * NUM_OF_LAYERS + tempCount2].layerBuffer[tempSize - 1]),
-							mainServer->packetsSendLayer[tempCount1-1].buffer + cumlativeByteSum);
+							&(mainServer->tileBufferByteSend1s.layerBufferArray[NUM_OF_TILES_BASE_LAYER + (tempCount1-1) * NUM_OF_LAYERS + tempCount2].layerBuffer[tempSize]),
+							mainServer->packetsSendLayer[tempCount1].buffer + cumlativeByteSum);
 						cumlativeByteSum += tempSize;
 					}
 					mainServer->packetsSendLayer[tempCount1].dataPacketSize = totLayerSize[tempCount1] + 2 * NUM_OF_FOV_TILES;

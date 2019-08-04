@@ -165,7 +165,7 @@ typedef struct tileBufferByteSend {
 
 typedef struct dataPacketSendBLayer {
 	int dataPacketSize;
-	uint16_t layerSizes[NUM_OF_LAYERS];
+	//uint16_t layerSizes[NUM_OF_LAYERS];
 	uint8_t buffer[DEFAULT_PACKET_BUFFER_B_LAYER];
 	SOCKET socket;
 }dataPacketSendLayer;

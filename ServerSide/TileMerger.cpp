@@ -61,7 +61,7 @@ void TileMerger::mergeTiles() {
 							(*this->tileBufferByteSend1s).layerBufferArray[raw*NUM_OF_COL + col].layerBuffer);
 
 						(*this->tileBufferByteSend1s).layerSize[raw*NUM_OF_COL + col] = 
-							(*this->videoDataBases[0]).tilesSize[raw][col].chunksSize->sublayer1Size;
+							(*this->videoDataBases[0]).tilesSize[raw][col].chunksSize[chunk].sublayer1Size;
 
 						counterTiles++;
 					}
@@ -75,7 +75,7 @@ void TileMerger::mergeTiles() {
 						(*this->tileBufferByteSend1s).layerBufferArray[counterTiles].layerBuffer);
 
 					(*this->tileBufferByteSend1s).layerSize[counterTiles] =
-						(*this->videoDataBases[0]).tilesSize[yCor[tempCounter]][xCor[tempCounter]].chunksSize->sublayer2Size;
+						(*this->videoDataBases[0]).tilesSize[yCor[tempCounter]][xCor[tempCounter]].chunksSize[chunk].sublayer2Size;
 					counterTiles++;
 				}
 			}
@@ -88,7 +88,7 @@ void TileMerger::mergeTiles() {
 						(*this->tileBufferByteSend1s).layerBufferArray[counterTiles].layerBuffer);
 
 					(*this->tileBufferByteSend1s).layerSize[counterTiles] =
-						(*this->videoDataBases[0]).tilesSize[yCor[tempCounter]][xCor[tempCounter]].chunksSize->sublayer3Size;
+						(*this->videoDataBases[0]).tilesSize[yCor[tempCounter]][xCor[tempCounter]].chunksSize[chunk].sublayer3Size;
 					counterTiles++;
 				}
 			}
@@ -101,7 +101,7 @@ void TileMerger::mergeTiles() {
 						(*this->tileBufferByteSend1s).layerBufferArray[counterTiles].layerBuffer);
 
 					(*this->tileBufferByteSend1s).layerSize[counterTiles] =
-						(*this->videoDataBases[0]).tilesSize[yCor[tempCounter]][xCor[tempCounter]].chunksSize->sublayer4Size;
+						(*this->videoDataBases[0]).tilesSize[yCor[tempCounter]][xCor[tempCounter]].chunksSize[chunk].sublayer4Size;
 					counterTiles++;
 				}
 			}

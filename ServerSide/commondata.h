@@ -77,8 +77,12 @@ each packet related to the 1s video chunk of tile is
 #define NUM_OF_LAYERS					4
 
 #define DEFAULT_SUB_LAYER_LENGTH		1024*8
-#define DEFAULT_PACKET_BUFFER_B_LAYER	DEFAULT_SUB_LAYER_LENGTH*NUM_OF_TILES_BASE_LAYER + 2*NUM_OF_TILES_BASE_LAYER  //2*20 => 2 Bytes * 20 for layer length data
+
+#define DEFAULT_PACKET_BUFFER_B_LAYER	DEFAULT_SUB_LAYER_LENGTH*NUM_OF_TILES_BASE_LAYER + 2*NUM_OF_TILES_BASE_LAYER + 4  //2*20 => 2 Bytes * 20 for layer length data , Last 2 is for adding
+																														  // the chunk number
 #define DEFAULT_PACKET_BUFFER_E_LAYER	DEFAULT_SUB_LAYER_LENGTH*NUM_OF_FOV_TILES + 2*NUM_OF_FOV_TILES
+
+#define TOT_BUFFER_LENGTH				DEFAULT_PACKET_BUFFER_B_LAYER + DEFAULT_PACKET_BUFFER_E_LAYER*3
 
 
 
@@ -166,7 +170,7 @@ typedef struct tileBufferByteSend {
 typedef struct dataPacketSendBLayer {
 	int dataPacketSize;
 	//uint16_t layerSizes[NUM_OF_LAYERS];
-	uint8_t buffer[DEFAULT_PACKET_BUFFER_B_LAYER];
+	uint8_t buffer[TOT_BUFFER_LENGTH];
 	SOCKET socket;
 }dataPacketSendLayer;
 

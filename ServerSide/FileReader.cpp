@@ -81,7 +81,8 @@ int FileReader::createDataBase() {
 					/*av_init_packet(&pkt);
 					pkt.data = NULL;
 					pkt.size = 0;*/
-					av_log(NULL, AV_LOG_INFO, "readFile %d %d %02d %d  \n", row, col, sec, layer);
+					//av_log(NULL, AV_LOG_INFO, "readFile %d %d %02d %d  \n", row, col, sec, layer);
+					cout << "read file" << " " << row << " " << col << " " << sec << " " << layer << endl;
 					int frameCount=0;
 					while ((numOfBytesReadTemp = avio_read(input, buf, sizeof(buf))) >= 0) {
 						//frameCount++;

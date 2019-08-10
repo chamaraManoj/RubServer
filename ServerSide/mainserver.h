@@ -16,7 +16,9 @@
 class MainServer {
 private:
 	
+	
 public:
+	bool isParallelStreaming;
 	MainServer();
 	int i;
 	tileBufferByte tileBufferByte1s;
@@ -25,9 +27,9 @@ public:
 	string filePaths[QUALITY_LEVEL];
 	char chunkData[DEFAULT_BUFLEN_RECEIVE];
 
-	dataPacketSendLayer packetsSendLayer[4]; //NUM_OF_TILES is the same value
+	dataPacketSendLayer packetsSendLayerParallel[4]; //NUM_OF_TILES is the same value
 	//dataPacketSendELayer packetsSendELayer[3];
-
+	dataPacketSendLayer packetsSendLayer[1];
 
 };
 

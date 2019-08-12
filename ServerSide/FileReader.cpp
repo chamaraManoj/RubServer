@@ -43,8 +43,7 @@ int FileReader::createDataBase() {
 	int layer;
 	//*i = *i + 1;
 	int ret = 0, got_frame;
-	AVPacket pkt;
-	AVFormatContext* fmt_ctx = NULL;
+	
 	AVIOContext* input = NULL;
 	uint8_t buf[DEFAULT_SUB_LAYER_LENGTH];
 	int video_frame_count = 0;
@@ -65,6 +64,7 @@ int FileReader::createDataBase() {
 						fprintf(stderr, "Could not open source file %s\n", tempFilePath.c_str());
 						exit(1);
 					}
+					AVPacket pkt;
 
 					numOfBytesread = 0;
 					numOfBytesReadTemp = 0;
@@ -89,7 +89,37 @@ int FileReader::createDataBase() {
 						//AVPacket orig_pkt = pkt;
 						numOfBytesread += numOfBytesReadTemp;
 					}
+					open_input_file(tempFilePath.c_str());
+					
+
+					
+
+			
+					ret = av_read_frame(ifmt_ctx, &pkt);
+
+					while (ret >= 0) {
+						ret=av_read_frame(ifmt_ctx, &pkt);
+						uint8_t* ref = pkt.data;
 						
+						cout << "decompression time " << pkt.dts*60 << endl;
+						cout << "presentation time  " << pkt.pts*60<<endl;
+						cout << "size               " << pkt.size<<endl;
+						cout << "flags              " << pkt.flags<<endl;
+						
+						if (ref == NULL) {
+							cout << "NULL" << endl;
+						}
+						/*for (int i = 0; i < pkt.size+10; i++) {
+							printf("%d\n", ref[i]);
+						}*/
+						cout << endl;
+
+					}
+					cout << endl;
+					avformat_close_input(&ifmt_ctx);
+					
+
+
 						//if (pkt.size > 1) {
 							
 						//printf("%d", pkt.size );
@@ -156,5 +186,61 @@ int FileReader::createDataBase() {
 }
 
 
+int  FileReader::open_input_file(const char* filename)
+{
+	int ret;
+	unsigned int i;
 
+	ifmt_ctx = NULL;
+	if ((ret = avformat_open_input(&ifmt_ctx, filename, NULL, NULL)) < 0) {
+		av_log(NULL, AV_LOG_ERROR, "Cannot open input file\n");
+		return ret;
+	}
 
+	if ((ret = avformat_find_stream_info(ifmt_ctx, NULL)) < 0) {
+		av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
+		return ret;
+	}
+
+	//stream_ctx = (StreamContext*)av_mallocz_array(ifmt_ctx->nb_streams, sizeof(*stream_ctx));
+	//if (!stream_ctx)
+		//return AVERROR(ENOMEM);
+
+	/*for (i = 0; i < ifmt_ctx->nb_streams; i++) {
+		AVStream* stream = ifmt_ctx->streams[i];
+		AVCodec* dec = avcodec_find_decoder(stream->codecpar->codec_id);
+		AVCodecContext* codec_ctx;
+		if (!dec) {
+			av_log(NULL, AV_LOG_ERROR, "Failed to find decoder for stream #%u\n", i);
+			return AVERROR_DECODER_NOT_FOUND;
+		}
+		codec_ctx = avcodec_alloc_context3(dec);
+		if (!codec_ctx) {
+			av_log(NULL, AV_LOG_ERROR, "Failed to allocate the decoder context for stream #%u\n", i);
+			return AVERROR(ENOMEM);
+		}
+		ret = avcodec_parameters_to_context(codec_ctx, stream->codecpar);
+		if (ret < 0) {
+			av_log(NULL, AV_LOG_ERROR, "Failed to copy decoder parameters to input decoder context "
+				"for stream #%u\n", i);
+			return ret;
+		}
+		/* Reencode video & audio and remux subtitles etc. */
+		/*if (codec_ctx->codec_type == AVMEDIA_TYPE_VIDEO
+			|| codec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
+			if (codec_ctx->codec_type == AVMEDIA_TYPE_VIDEO)
+				codec_ctx->framerate = av_guess_frame_rate(ifmt_ctx, stream, NULL);
+			/* Open decoder */
+		/*	ret = avcodec_open2(codec_ctx, dec, NULL);
+			if (ret < 0) {
+				av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
+				return ret;
+			}
+		}*/
+		//stream_ctx[i].dec_ctx = codec_ctx;
+	//}
+
+	//av_dump_format(ifmt_ctx, 0, filename, 0);
+	
+	return 0;
+}
